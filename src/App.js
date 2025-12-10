@@ -18,14 +18,10 @@ module.exports = async (req, res) => {
       },
     });
 
-    // Fetch all products
     const productsResponse = await shopifyAPI.get('/products.json', {
-      params: { 
-        limit: 250
-      }
+      params: { limit: 250 }
     });
 
-    // Fetch orders for sales data
     const ordersResponse = await shopifyAPI.get('/orders.json', {
       params: { 
         limit: 250,
@@ -34,19 +30,12 @@ module.exports = async (req, res) => {
       }
     });
 
-    // Filter out draft, archived, and non-physical products
+    // Filter out non-physical products
     const products = productsResponse.data.products.filter(p => {
       if (p.status !== 'active') return false;
       
       const productType = (p.product_type || '').toUpperCase();
-      if (
-        productType.includes('DIGITAL') ||
-        productType.includes('DOWNLOAD') ||
-        productType.includes('SERVICE') ||
-        productType.includes('PRINT IT YOURSELF') ||
-        productType === 'UNCATEGORIZED' ||
-        productType === ''
-      ) {
+      if (productType.includes('DIGITAL FILE') || productType.includes('DIGITAL') || productType.includes('DOWNLOAD')) {
         return false;
       }
       
@@ -55,7 +44,7 @@ module.exports = async (req, res) => {
     
     const orders = ordersResponse.data.orders;
 
-    // Calculate sales by product from orders
+    // Calculate sales by product
     const salesByProduct = {};
     orders.forEach(order => {
       if (order.line_items) {
@@ -63,24 +52,19 @@ module.exports = async (req, res) => {
           const productId = item.product_id;
           if (productId) {
             if (!salesByProduct[productId]) {
-              salesByProduct[productId] = {
-                totalQuantity: 0,
-                productTitle: item.title,
-                sku: item.sku
-              };
+              salesByProduct[productId] = 0;
             }
-            salesByProduct[productId].totalQuantity += item.quantity;
+            salesByProduct[productId] += item.quantity;
           }
         });
       }
     });
 
-    // Calculate average monthly sales per product
     const monthsSinceStart = 24;
     const productSalesData = {};
     
     Object.keys(salesByProduct).forEach(productId => {
-      const avgMonthlySales = Math.round(salesByProduct[productId].totalQuantity / monthsSinceStart);
+      const avgMonthlySales = Math.round(salesByProduct[productId] / monthsSinceStart);
       productSalesData[productId] = avgMonthlySales;
     });
 
@@ -89,8 +73,7 @@ module.exports = async (req, res) => {
       .map(p => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
-        // Minimum stock = 2 months of average sales (safety buffer)
-        const calculatedMinimum = Math.max(avgMonthlySales * 2, 10); // At least 10 units minimum
+        const calculatedMinimum = Math.max(avgMonthlySales * 2, 10);
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
         return {
@@ -99,14 +82,13 @@ module.exports = async (req, res) => {
           current: currentStock,
           minimum: calculatedMinimum,
           deficit: Math.max(0, calculatedMinimum - currentStock),
-          avgMonthlySales: avgMonthlySales,
-          status: p.status
+          avgMonthlySales: avgMonthlySales
         };
       })
       .filter(item => item.deficit > 0)
       .sort((a, b) => b.deficit - a.deficit);
 
-    // Calculate quarterly predictions based on actual sales
+    // Calculate predictions
     const predictions = products
       .filter(p => productSalesData[p.id])
       .slice(0, 20)
@@ -124,8 +106,7 @@ module.exports = async (req, res) => {
           q2Target: Math.round(baseQuarterlySales * safetyBuffer * 1.1),
           q3Target: Math.round(baseQuarterlySales * safetyBuffer * 1.05),
           q4Target: Math.round(baseQuarterlySales * safetyBuffer * 1.3),
-          avgMonthlySales: avgMonthlySales,
-          status: product.status
+          avgMonthlySales: avgMonthlySales
         };
       })
       .filter(p => p.avgMonthlySales > 0);
@@ -134,8 +115,7 @@ module.exports = async (req, res) => {
       lowStockItems,
       predictions,
       totalProducts: products.length,
-      totalOrders: orders.length,
-      productsFiltered: 'active-physical-only'
+      totalOrders: orders.length
     });
 
   } catch (error) {
