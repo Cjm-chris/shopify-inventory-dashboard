@@ -63,8 +63,9 @@ const ShopifyInventoryDashboard = () => {
   const totalOrders = data?.totalOrders || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto" style={{paddingLeft: '80px', paddingRight: '40px', paddingTop: '32px', paddingBottom: '32px'}}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 pl-16 pr-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -83,6 +84,7 @@ const ShopifyInventoryDashboard = () => {
           </div>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
@@ -115,9 +117,10 @@ const ShopifyInventoryDashboard = () => {
           </div>
         </div>
 
+        {/* Low Stock Table */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-bold text-slate-800 mb-4">Items Below Minimum Stock Level</h2>
-          <p className="text-slate-600 mb-6">Minimum stock calculated from last 6 months of sales data (2 months supply)</p>
+          <p className="text-slate-600 mb-6">Minimum stock calculated from 1 year of sales data (2 months supply)</p>
           
           {lowStockItems.length === 0 ? (
             <div className="text-center py-12">
@@ -127,45 +130,48 @@ const ShopifyInventoryDashboard = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              
-              <table style={{borderCollapse: 'collapse', border: '2px solid black'}} className="w-full">
+              <table className="w-full">
                 <thead>
-                  <tr style={{backgroundColor: '#e2e8f0'}}>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">SKU</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Product Name</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Units Needed</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Current Stock</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#dbeafe'}} className="font-semibold text-slate-800">Avg Monthly Sales</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Minimum Level</th>
+                  <tr className="bg-slate-100 border-b-2 border-slate-300">
+                    <th className="text-left p-4 font-semibold text-slate-700">SKU</th>
+                    <th className="text-left p-4 font-semibold text-slate-700">Product Name</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Current Stock</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Minimum Level</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Units Needed</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Priority</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lowStockItems.map((item, index) => (
-                    <tr key={index} className="hover:bg-slate-50">
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-medium">{item?.name || 'Unknown'}</td>
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>
-                        <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
-                          {Math.round(item?.deficit || 0)}
-                        </span>
-                      </td>
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>
+                    <tr key={index} className="border-b hover:bg-slate-50">
+                      <td className="p-4 font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
+                      <td className="p-4 font-medium">{item?.name || 'Unknown'}</td>
+                      <td className="p-4 text-center">
                         <span className={`px-3 py-1 rounded-full font-semibold ${
                           (item?.current || 0) < 0 ? 'bg-red-200 text-red-900' : 'bg-red-100 text-red-800'
                         }`}>
-                          {Math.round(item?.current || 0)}
+                          {item?.current || 0}
                         </span>
                       </td>
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#eff6ff'}} className="font-semibold">
-                        {Math.round(item?.avgMonthlySales || 0)}
+                      <td className="p-4 text-center">{item?.minimum || 10}</td>
+                      <td className="p-4 text-center">
+                        <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
+                          {item?.deficit || 0}
+                        </span>
                       </td>
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>{Math.round(item?.minimum || 0)}</td>
+                      <td className="p-4 text-center">
+                        <span className={`px-3 py-1 rounded-full font-semibold ${
+                          (item?.deficit || 0) > 50 ? 'bg-red-500 text-white' : 
+                          (item?.deficit || 0) > 30 ? 'bg-orange-500 text-white' : 
+                          'bg-yellow-500 text-white'
+                        }`}>
+                          {(item?.deficit || 0) > 50 ? 'CRITICAL' : (item?.deficit || 0) > 30 ? 'URGENT' : 'HIGH'}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-
-
               {lowStockItems.length > 50 && (
                 <div className="mt-4 text-center text-slate-600">
                   Showing first 50 of {lowStockItems.length} low stock items
@@ -175,6 +181,7 @@ const ShopifyInventoryDashboard = () => {
           )}
         </div>
 
+        {/* Footer Info */}
         <div className="mt-6 bg-white rounded-lg shadow p-4 text-center text-slate-600 text-sm">
           <p>Data synchronized from Shopify • Last updated: {new Date().toLocaleString()} • {totalProducts} products tracked • {lowStockItems.length} items need restocking</p>
         </div>
