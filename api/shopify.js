@@ -104,7 +104,7 @@ module.exports = async (req, res) => {
       productSalesData[productId] = avgMonthlySales;
     });
 
-    // Calculate low stock items
+    // Calculate low stock items and sort by SKU
     const lowStockItems = products
       .map(p => {
         const variant = p.variants && p.variants[0];
@@ -124,7 +124,12 @@ module.exports = async (req, res) => {
         };
       })
       .filter(item => item.deficit > 0)
-      .sort((a, b) => b.deficit - a.deficit);
+      .sort((a, b) => {
+        // Sort by SKU alphabetically
+        const skuA = (a.sku || '').toString().toLowerCase();
+        const skuB = (b.sku || '').toString().toLowerCase();
+        return skuA.localeCompare(skuB);
+      });
 
     res.json({
       lowStockItems,

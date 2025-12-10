@@ -127,42 +127,45 @@ const ShopifyInventoryDashboard = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full border-2 border-slate-400">
+              
+              <table style={{borderCollapse: 'collapse', border: '2px solid black'}} className="w-full">
                 <thead>
-                  <tr className="bg-slate-200">
-                    <th className="text-center p-4 font-semibold text-slate-800 border-2 border-slate-400">SKU</th>
-                    <th className="text-center p-4 font-semibold text-slate-800 border-2 border-slate-400">Product Name</th>
-                    <th className="text-center p-4 font-semibold text-slate-800 border-2 border-slate-400">Units Needed</th>
-                    <th className="text-center p-4 font-semibold text-slate-800 border-2 border-slate-400">Current Stock</th>
-                    <th className="text-center p-4 font-semibold text-slate-800 bg-blue-100 border-2 border-slate-400">Avg Monthly Sales</th>
-                    <th className="text-center p-4 font-semibold text-slate-800 border-2 border-slate-400">Minimum Level</th>
+                  <tr style={{backgroundColor: '#e2e8f0'}}>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">SKU</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Product Name</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Units Needed</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Current Stock</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#dbeafe'}} className="font-semibold text-slate-800">Avg Monthly Sales</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Minimum Level</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lowStockItems.map((item, index) => (
                     <tr key={index} className="hover:bg-slate-50">
-                      <td className="p-4 font-mono text-sm text-slate-600 text-center border-2 border-slate-400">{item?.sku || 'N/A'}</td>
-                      <td className="p-4 font-medium text-center border-2 border-slate-400">{item?.name || 'Unknown'}</td>
-                      <td className="p-4 text-center border-2 border-slate-400">
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-medium">{item?.name || 'Unknown'}</td>
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>
                         <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
                           {Math.round(item?.deficit || 0)}
                         </span>
                       </td>
-                      <td className="p-4 text-center border-2 border-slate-400">
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>
                         <span className={`px-3 py-1 rounded-full font-semibold ${
                           (item?.current || 0) < 0 ? 'bg-red-200 text-red-900' : 'bg-red-100 text-red-800'
                         }`}>
                           {Math.round(item?.current || 0)}
                         </span>
                       </td>
-                      <td className="p-4 text-center bg-blue-50 font-semibold border-2 border-slate-400">
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#eff6ff'}} className="font-semibold">
                         {Math.round(item?.avgMonthlySales || 0)}
                       </td>
-                      <td className="p-4 text-center border-2 border-slate-400">{Math.round(item?.minimum || 0)}</td>
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>{Math.round(item?.minimum || 0)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+
               {lowStockItems.length > 50 && (
                 <div className="mt-4 text-center text-slate-600">
                   Showing first 50 of {lowStockItems.length} low stock items
