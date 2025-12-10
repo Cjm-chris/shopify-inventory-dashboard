@@ -18,10 +18,14 @@ module.exports = async (req, res) => {
       },
     });
 
+    // Fetch all products
     const productsResponse = await shopifyAPI.get('/products.json', {
-      params: { limit: 250 }
+      params: { 
+        limit: 250
+      }
     });
 
+    // Fetch orders for sales data
     const ordersResponse = await shopifyAPI.get('/orders.json', {
       params: { 
         limit: 250,
@@ -30,44 +34,115 @@ module.exports = async (req, res) => {
       }
     });
 
-    const products = productsResponse.data.products
-.filter(p => p.status === 'active');
+    // Filter out draft, archived, and non-physical products
+    const products = productsResponse.data.products.filter(p => {
+      if (p.status !== 'active') return false;
+      
+      const productType = (p.product_type || '').toUpperCase();
+      if (
+        productType.includes('DIGITAL') ||
+        productType.includes('DOWNLOAD') ||
+        productType.includes('SERVICE') ||
+        productType.includes('PRINT IT YOURSELF') ||
+        productType === 'UNCATEGORIZED' ||
+        productType === ''
+      ) {
+        return false;
+      }
+      
+      return true;
+    });
+    
     const orders = ordersResponse.data.orders;
 
+    // Calculate sales by product from orders
+    const salesByProduct = {};
+    orders.forEach(order => {
+      if (order.line_items) {
+        order.line_items.forEach(item => {
+          const productId = item.product_id;
+          if (productId) {
+            if (!salesByProduct[productId]) {
+              salesByProduct[productId] = {
+                totalQuantity: 0,
+                productTitle: item.title,
+                sku: item.sku
+              };
+            }
+            salesByProduct[productId].totalQuantity += item.quantity;
+          }
+        });
+      }
+    });
+
+    // Calculate average monthly sales per product
+    const monthsSinceStart = 24;
+    const productSalesData = {};
+    
+    Object.keys(salesByProduct).forEach(productId => {
+      const avgMonthlySales = Math.round(salesByProduct[productId].totalQuantity / monthsSinceStart);
+      productSalesData[productId] = avgMonthlySales;
+    });
+
+    // Calculate low stock items
     const lowStockItems = products
-      .map(p => ({
-        name: p.title,
-        current: p.variants[0]?.inventory_quantity || 0,
-        minimum: 50,
-        deficit: Math.max(0, 50 - (p.variants[0]?.inventory_quantity || 0)),
-        category: p.product_type || 'Uncategorized'
-      }))
+      .map(p => {
+        const variant = p.variants && p.variants[0];
+        const avgMonthlySales = productSalesData[p.id] || 0;
+        // Minimum stock = 2 months of average sales (safety buffer)
+        const calculatedMinimum = Math.max(avgMonthlySales * 2, 10); // At least 10 units minimum
+        const currentStock = (variant && variant.inventory_quantity) || 0;
+        
+        return {
+          sku: (variant && variant.sku) || p.id.toString(),
+          name: p.title,
+          current: currentStock,
+          minimum: calculatedMinimum,
+          deficit: Math.max(0, calculatedMinimum - currentStock),
+          avgMonthlySales: avgMonthlySales,
+          status: p.status
+        };
+      })
       .filter(item => item.deficit > 0)
       .sort((a, b) => b.deficit - a.deficit);
 
-    const predictions = products.slice(0, 10).map(product => ({
-      product: product.title,
-      currentStock: product.variants[0]?.inventory_quantity || 0,
-      q1Target: 180,
-      q2Target: 240,
-      q3Target: 200,
-      q4Target: 320,
-      avgMonthlySales: 60
-    }));
+    // Calculate quarterly predictions based on actual sales
+    const predictions = products
+      .filter(p => productSalesData[p.id])
+      .slice(0, 20)
+      .map(product => {
+        const variant = product.variants && product.variants[0];
+        const avgMonthlySales = productSalesData[product.id] || 0;
+        const safetyBuffer = 1.2;
+        const baseQuarterlySales = avgMonthlySales * 3;
+        
+        return {
+          sku: (variant && variant.sku) || product.id.toString(),
+          product: product.title,
+          currentStock: (variant && variant.inventory_quantity) || 0,
+          q1Target: Math.round(baseQuarterlySales * safetyBuffer),
+          q2Target: Math.round(baseQuarterlySales * safetyBuffer * 1.1),
+          q3Target: Math.round(baseQuarterlySales * safetyBuffer * 1.05),
+          q4Target: Math.round(baseQuarterlySales * safetyBuffer * 1.3),
+          avgMonthlySales: avgMonthlySales,
+          status: product.status
+        };
+      })
+      .filter(p => p.avgMonthlySales > 0);
 
     res.json({
       lowStockItems,
       predictions,
       totalProducts: products.length,
-      totalOrders: orders.length
+      totalOrders: orders.length,
+      productsFiltered: 'active-physical-only'
     });
 
   } catch (error) {
-    console.error('Shopify API Error:', error.response?.data || error.message);
+    console.error('Shopify API Error:', error.response ? error.response.data : error.message);
     res.status(500).json({ 
       error: 'Failed to fetch Shopify data',
       details: error.message 
     });
   }
 };
-// Updated Wed Dec 10 14:43:18 EST 2025
