@@ -92,7 +92,6 @@ const ShopifyInventoryDashboard = () => {
                 <p className="text-slate-600 text-sm font-medium">Low Stock Items</p>
                 <p className="text-3xl font-bold text-red-600 mt-2">{lowStockItems.length}</p>
               </div>
-              <AlertTriangle className="text-red-600" size={40} />
             </div>
           </div>
           
@@ -102,7 +101,6 @@ const ShopifyInventoryDashboard = () => {
                 <p className="text-slate-600 text-sm font-medium">Total Products Tracked</p>
                 <p className="text-3xl font-bold text-slate-800 mt-2">{totalProducts}</p>
               </div>
-              <Package className="text-blue-600" size={40} />
             </div>
           </div>
           
@@ -112,7 +110,6 @@ const ShopifyInventoryDashboard = () => {
                 <p className="text-slate-600 text-sm font-medium">Total Orders</p>
                 <p className="text-3xl font-bold text-green-600 mt-2">{totalOrders}</p>
               </div>
-              <TrendingUp className="text-green-600" size={40} />
             </div>
           </div>
         </div>
