@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
       params: { 
         limit: 250,
         status: 'any',
-        created_at_min: '2024-01-01'
+        created_at_min: '2024-07-01'
       }
     });
 
@@ -60,11 +60,11 @@ module.exports = async (req, res) => {
       }
     });
 
-    const monthsSinceStart = 12;
+    const monthsSinceStart = 6;
     const productSalesData = {};
     
     Object.keys(salesByProduct).forEach(productId => {
-      const avgMonthlySales = salesByProduct[productId] / monthsSinceStart;
+      const avgMonthlySales = Math.round(salesByProduct[productId] / monthsSinceStart);
       productSalesData[productId] = avgMonthlySales;
     });
 
@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
         
-        // Calculate minimum: 2 months supply (no rounding, no defaults)
+        // Calculate minimum: 2 months supply
         const calculatedMinimum = avgMonthlySales * 2;
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
