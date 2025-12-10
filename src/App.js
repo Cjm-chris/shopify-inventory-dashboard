@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { AlertTriangle, TrendingUp, Package, Calendar } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Package } from 'lucide-react';
 
 const ShopifyInventoryDashboard = () => {
-  const [activeTab, setActiveTab] = useState('lowStock');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,22 +59,15 @@ const ShopifyInventoryDashboard = () => {
   }
 
   const lowStockItems = data?.lowStockItems || [];
-  const quarterlyPredictions = data?.predictions || [];
   const totalProducts = data?.totalProducts || 0;
   const totalOrders = data?.totalOrders || 0;
 
-  const salesTrendData = [
-    { quarter: 'Q1 2024', sales: 1250 },
-    { quarter: 'Q2 2024', sales: 1480 },
-    { quarter: 'Q3 2024', sales: 1620 },
-    { quarter: 'Q4 2024', sales: 2100 },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4 sm:px-8 lg:px-12">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <Package className="text-blue-600" size={36} />
@@ -93,6 +84,7 @@ const ShopifyInventoryDashboard = () => {
           </div>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
@@ -125,173 +117,71 @@ const ShopifyInventoryDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="flex border-b">
-            <button
-              onClick={() => setActiveTab('lowStock')}
-              className={`flex-1 px-6 py-4 font-semibold transition-colors ${
-                activeTab === 'lowStock' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <AlertTriangle className="inline mr-2" size={20} />
-              Low Stock Alert ({lowStockItems.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('predictions')}
-              className={`flex-1 px-6 py-4 font-semibold transition-colors ${
-                activeTab === 'predictions' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Calendar className="inline mr-2" size={20} />
-              Quarterly Predictions
-            </button>
-            <button
-              onClick={() => setActiveTab('trends')}
-              className={`flex-1 px-6 py-4 font-semibold transition-colors ${
-                activeTab === 'trends' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <TrendingUp className="inline mr-2" size={20} />
-              Sales Trends
-            </button>
-          </div>
-
-          <div className="p-6">
-            {activeTab === 'lowStock' && (
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Items Below Minimum Stock Level</h2>
-                {lowStockItems.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Package className="text-green-600 mx-auto mb-4" size={64} />
-                    <p className="text-xl font-semibold text-slate-800">All items are adequately stocked!</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-slate-100 border-b-2 border-slate-300">
-                          <th className="text-left p-4 font-semibold text-slate-700">SKU</th>
-                          <th className="text-left p-4 font-semibold text-slate-700">Product Name</th>
-                          <th className="text-center p-4 font-semibold text-slate-700">Current Stock</th>
-                          <th className="text-center p-4 font-semibold text-slate-700">Minimum Level</th>
-                          <th className="text-center p-4 font-semibold text-slate-700">Units Needed</th>
-                          <th className="text-center p-4 font-semibold text-slate-700">Priority</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {lowStockItems.slice(0, 50).map((item, index) => (
-                          <tr key={index} className="border-b hover:bg-slate-50">
-                            <td className="p-4 font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
-                            <td className="p-4 font-medium">{item?.name || 'Unknown'}</td>
-                            <td className="p-4 text-center">
-                              <span className={`px-3 py-1 rounded-full font-semibold ${
-                                (item?.current || 0) < 0 ? 'bg-red-200 text-red-900' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {item?.current || 0}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">{item?.minimum || 10}</td>
-                            <td className="p-4 text-center">
-                              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
-                                {item?.deficit || 0}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className={`px-3 py-1 rounded-full font-semibold ${
-                                (item?.deficit || 0) > 50 ? 'bg-red-500 text-white' : 
-                                (item?.deficit || 0) > 30 ? 'bg-orange-500 text-white' : 
-                                'bg-yellow-500 text-white'
-                              }`}>
-                                {(item?.deficit || 0) > 50 ? 'CRITICAL' : (item?.deficit || 0) > 30 ? 'URGENT' : 'HIGH'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'predictions' && (
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Recommended Quarterly Stock Levels</h2>
-                <p className="text-slate-600 mb-6">Based on historical sales data with 20% safety buffer</p>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-slate-100 border-b-2 border-slate-300">
-                        <th className="text-left p-4 font-semibold text-slate-700">SKU</th>
-                        <th className="text-left p-4 font-semibold text-slate-700">Product</th>
-                        <th className="text-center p-4 font-semibold text-slate-700">Current Stock</th>
-                        <th className="text-center p-4 font-semibold text-slate-700 bg-blue-50">Q1 Target</th>
-                        <th className="text-center p-4 font-semibold text-slate-700 bg-green-50">Q2 Target</th>
-                        <th className="text-center p-4 font-semibold text-slate-700 bg-yellow-50">Q3 Target</th>
-                        <th className="text-center p-4 font-semibold text-slate-700 bg-orange-50">Q4 Target</th>
-                        <th className="text-center p-4 font-semibold text-slate-700">Avg Monthly Sales</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {quarterlyPredictions.map((item, index) => (
-                        <tr key={index} className="border-b hover:bg-slate-50">
-                          <td className="p-4 font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
-                          <td className="p-4 font-medium">{item?.product || 'Unknown'}</td>
-                          <td className="p-4 text-center">
-                            <span className={`px-3 py-1 rounded-full font-semibold ${
-                              (item?.currentStock || 0) < 0 ? 'bg-red-200 text-red-900' : 'bg-slate-200'
-                            }`}>
-                              {item?.currentStock || 0}
-                            </span>
-                          </td>
-                          <td className="p-4 text-center bg-blue-50 font-semibold">{item?.q1Target || 0}</td>
-                          <td className="p-4 text-center bg-green-50 font-semibold">{item?.q2Target || 0}</td>
-                          <td className="p-4 text-center bg-yellow-50 font-semibold">{item?.q3Target || 0}</td>
-                          <td className="p-4 text-center bg-orange-50 font-semibold">{item?.q4Target || 0}</td>
-                          <td className="p-4 text-center text-slate-600">{item?.avgMonthlySales || 0}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+        {/* Low Stock Table */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Items Below Minimum Stock Level</h2>
+          <p className="text-slate-600 mb-6">Minimum stock calculated from 1 year of sales data (2 months supply)</p>
+          
+          {lowStockItems.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="text-green-600 mx-auto mb-4" size={64} />
+              <p className="text-xl font-semibold text-slate-800">All items are adequately stocked!</p>
+              <p className="text-slate-600 mt-2">No items are below the minimum stock level.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-100 border-b-2 border-slate-300">
+                    <th className="text-left p-4 font-semibold text-slate-700">SKU</th>
+                    <th className="text-left p-4 font-semibold text-slate-700">Product Name</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Current Stock</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Minimum Level</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Units Needed</th>
+                    <th className="text-center p-4 font-semibold text-slate-700">Priority</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lowStockItems.map((item, index) => (
+                    <tr key={index} className="border-b hover:bg-slate-50">
+                      <td className="p-4 font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
+                      <td className="p-4 font-medium">{item?.name || 'Unknown'}</td>
+                      <td className="p-4 text-center">
+                        <span className={`px-3 py-1 rounded-full font-semibold ${
+                          (item?.current || 0) < 0 ? 'bg-red-200 text-red-900' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item?.current || 0}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">{item?.minimum || 10}</td>
+                      <td className="p-4 text-center">
+                        <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
+                          {item?.deficit || 0}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className={`px-3 py-1 rounded-full font-semibold ${
+                          (item?.deficit || 0) > 50 ? 'bg-red-500 text-white' : 
+                          (item?.deficit || 0) > 30 ? 'bg-orange-500 text-white' : 
+                          'bg-yellow-500 text-white'
+                        }`}>
+                          {(item?.deficit || 0) > 50 ? 'CRITICAL' : (item?.deficit || 0) > 30 ? 'URGENT' : 'HIGH'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {lowStockItems.length > 50 && (
+                <div className="mt-4 text-center text-slate-600">
+                  Showing first 50 of {lowStockItems.length} low stock items
                 </div>
-
-                <div className="mt-8 bg-blue-50 border-l-4 border-blue-600 p-4">
-                  <h3 className="font-semibold text-blue-900 mb-2">Manufacturing Notes:</h3>
-                  <ul className="text-blue-800 space-y-1 ml-4">
-                    <li>• Predictions include 20% safety buffer to prevent stockouts</li>
-                    <li>• Q4 typically shows highest demand (holiday season)</li>
-                    <li>• Schedule production 4-6 weeks before quarter start</li>
-                    <li>• Review and adjust monthly based on actual sales performance</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'trends' && (
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Quarterly Sales Trends</h2>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={salesTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="quarter" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="sales" stroke="#2563eb" strokeWidth={3} name="Total Units Sold" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
+        {/* Footer Info */}
         <div className="mt-6 bg-white rounded-lg shadow p-4 text-center text-slate-600 text-sm">
           <p>Data synchronized from Shopify • Last updated: {new Date().toLocaleString()} • {totalProducts} products tracked • {lowStockItems.length} items need restocking</p>
         </div>
