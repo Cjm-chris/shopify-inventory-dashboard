@@ -182,6 +182,7 @@ const ShopifyInventoryDashboard = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="bg-slate-100 border-b-2 border-slate-300">
+                          <th className="text-left p-4 font-semibold text-slate-700">SKU</th>
                           <th className="text-left p-4 font-semibold text-slate-700">Product Name</th>
                           <th className="text-left p-4 font-semibold text-slate-700">Category</th>
                           <th className="text-center p-4 font-semibold text-slate-700">Current Stock</th>
@@ -193,6 +194,7 @@ const ShopifyInventoryDashboard = () => {
                       <tbody>
                         {lowStockItems.slice(0, 50).map((item, index) => (
                           <tr key={index} className="border-b hover:bg-slate-50">
+                            <td className="p-4 font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
                             <td className="p-4 font-medium">{item?.name || 'Unknown'}</td>
                             <td className="p-4">{item?.category || 'Uncategorized'}</td>
                             <td className="p-4 text-center">
@@ -241,6 +243,7 @@ const ShopifyInventoryDashboard = () => {
                   <table className="w-full">
                     <thead>
                       <tr className="bg-slate-100 border-b-2 border-slate-300">
+                        <th className="text-left p-4 font-semibold text-slate-700">SKU</th>
                         <th className="text-left p-4 font-semibold text-slate-700">Product</th>
                         <th className="text-center p-4 font-semibold text-slate-700">Current Stock</th>
                         <th className="text-center p-4 font-semibold text-slate-700 bg-blue-50">Q1 Target</th>
@@ -253,6 +256,7 @@ const ShopifyInventoryDashboard = () => {
                     <tbody>
                       {quarterlyPredictions.map((item, index) => (
                         <tr key={index} className="border-b hover:bg-slate-50">
+                          <td className="p-4 font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
                           <td className="p-4 font-medium">{item?.product || 'Unknown'}</td>
                           <td className="p-4 text-center">
                             <span className={`px-3 py-1 rounded-full font-semibold ${
