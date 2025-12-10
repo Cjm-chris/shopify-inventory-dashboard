@@ -9,7 +9,7 @@ const ShopifyInventoryDashboard = () => {
   const [password, setPassword] = useState('');
 
   // Password protection - CHANGE THIS PASSWORD
-  const CORRECT_PASSWORD = 'Jameskate19!';
+  const CORRECT_PASSWORD = 'Manufacturing2024!';
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -28,6 +28,31 @@ const ShopifyInventoryDashboard = () => {
       setAuthenticated(true);
     }
   }, []);
+
+  // Fetch data only when authenticated
+  useEffect(() => {
+    if (authenticated) {
+      fetch('/api/shopify')
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            setError(data.error);
+          } else {
+            setData(data);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching Shopify data:', err);
+          setError('Failed to load data');
+          setLoading(false);
+        });
+    }
+  }, [authenticated]);
+
+  const exportToPDF = () => {
+    alert('In a production app, this would generate a PDF report for your manufacturing team');
+  };
 
   // Show login screen if not authenticated
   if (!authenticated) {
@@ -57,29 +82,6 @@ const ShopifyInventoryDashboard = () => {
       </div>
     );
   }
-
-  // Original dashboard code continues below...
-  useEffect(() => {
-    fetch('/api/shopify')
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setData(data);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching Shopify data:', err);
-        setError('Failed to load data');
-        setLoading(false);
-      });
-  }, [authenticated]);
-
-  const exportToPDF = () => {
-    alert('In a production app, this would generate a PDF report for your manufacturing team');
-  };
 
   if (loading) {
     return (
