@@ -63,7 +63,7 @@ const ShopifyInventoryDashboard = () => {
   const totalOrders = data?.totalOrders || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4 sm:px-8 lg:px-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
