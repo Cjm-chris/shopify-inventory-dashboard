@@ -5,7 +5,60 @@ const ShopifyInventoryDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
 
+  // Password protection - CHANGE THIS PASSWORD
+  const CORRECT_PASSWORD = 'Jameskate19!';
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (password === CORRECT_PASSWORD) {
+      setAuthenticated(true);
+      sessionStorage.setItem('authenticated', 'true');
+    } else {
+      alert('Incorrect password. Please try again.');
+      setPassword('');
+    }
+  };
+
+  // Check if already authenticated in this browser session
+  useEffect(() => {
+    if (sessionStorage.getItem('authenticated') === 'true') {
+      setAuthenticated(true);
+    }
+  }, []);
+
+  // Show login screen if not authenticated
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-8">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <Package className="text-blue-600 mx-auto mb-4" size={64} />
+          <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">Inventory Dashboard</h2>
+          <p className="text-slate-600 mb-6 text-center">Please enter the password to access the dashboard</p>
+          <form onSubmit={handlePasswordSubmit}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              Access Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Original dashboard code continues below...
   useEffect(() => {
     fetch('/api/shopify')
       .then(res => res.json())
@@ -22,7 +75,7 @@ const ShopifyInventoryDashboard = () => {
         setError('Failed to load data');
         setLoading(false);
       });
-  }, []);
+  }, [authenticated]);
 
   const exportToPDF = () => {
     alert('In a production app, this would generate a PDF report for your manufacturing team');
