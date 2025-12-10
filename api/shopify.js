@@ -68,16 +68,14 @@ module.exports = async (req, res) => {
       productSalesData[productId] = avgMonthlySales;
     });
 
-    // Calculate low stock items (only show items with sales history)
+    // Calculate low stock items
     const lowStockItems = products
       .map(p => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
         
-        // Skip products with no sales history
-        if (avgMonthlySales === 0) return null;
-        
-        const calculatedMinimum = avgMonthlySales * 2; // 2 months supply
+        // Calculate minimum: if has sales data, use 2 months supply, otherwise use 25 as default
+        const calculatedMinimum = avgMonthlySales > 0 ? avgMonthlySales * 2 : 25;
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
         return {
@@ -89,7 +87,7 @@ module.exports = async (req, res) => {
           avgMonthlySales: avgMonthlySales
         };
       })
-      .filter(item => item !== null && item.deficit > 0)
+      .filter(item => item.deficit > 0)
       .sort((a, b) => b.deficit - a.deficit);
 
     res.json({
