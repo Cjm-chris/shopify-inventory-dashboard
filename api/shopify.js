@@ -43,10 +43,12 @@ module.exports = async (req, res) => {
     });
     
     const orders = ordersResponse.data.orders;
-
-    // Calculate sales by product from 1 year of data
+ // Calculate sales by product
     const salesByProduct = {};
+    let totalOrdersProcessed = 0;
+    
     orders.forEach(order => {
+      totalOrdersProcessed++;
       if (order.line_items) {
         order.line_items.forEach(item => {
           const productId = item.product_id;
@@ -59,6 +61,10 @@ module.exports = async (req, res) => {
         });
       }
     });
+    
+    console.log('Total orders processed:', totalOrdersProcessed);
+    console.log('Products with sales:', Object.keys(salesByProduct).length);
+    console.log('Sample sales data:', Object.entries(salesByProduct).slice(0, 5));
 
     const monthsSinceStart = 6;
     const productSalesData = {};
