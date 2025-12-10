@@ -30,7 +30,8 @@ module.exports = async (req, res) => {
       }
     });
 
-    const products = productsResponse.data.products;
+    const products = productsResponse.data.products
+.filter(p => p.status === 'active');
     const orders = ordersResponse.data.orders;
 
     const lowStockItems = products
