@@ -18,11 +18,10 @@ module.exports = async (req, res) => {
       },
     });
 
-    // Fetch only active products
+    // Fetch all products
     const productsResponse = await shopifyAPI.get('/products.json', {
       params: { 
-        limit: 250,
-        status: 'active'
+        limit: 250
       }
     });
 
@@ -35,64 +34,106 @@ module.exports = async (req, res) => {
       }
     });
 
-    // Filter to ensure only active products (double check)
-    const products = productsResponse.data.products
-      .filter(p => p.status === 'active');
+    // Filter out draft, archived, and non-physical products
+    const products = productsResponse.data.products.filter(p => {
+      if (p.status !== 'active') return false;
+      
+      const productType = (p.product_type || '').toUpperCase();
+      if (
+        productType.includes('DIGITAL') ||
+        productType.includes('DOWNLOAD') ||
+        productType.includes('SERVICE') ||
+        productType.includes('PRINT IT YOURSELF') ||
+        productType === 'UNCATEGORIZED' ||
+        productType === ''
+      ) {
+        return false;
+      }
+      
+      return true;
+    });
     
     const orders = ordersResponse.data.orders;
 
-    // Calculate low stock items (only from active, physical products)
+    // Calculate sales by product from orders
+    const salesByProduct = {};
+    orders.forEach(order => {
+      if (order.line_items) {
+        order.line_items.forEach(item => {
+          const productId = item.product_id;
+          if (productId) {
+            if (!salesByProduct[productId]) {
+              salesByProduct[productId] = {
+                totalQuantity: 0,
+                productTitle: item.title,
+                sku: item.sku
+              };
+            }
+            salesByProduct[productId].totalQuantity += item.quantity;
+          }
+        });
+      }
+    });
+
+    // Calculate average monthly sales per product
+    const monthsSinceStart = 24;
+    const productSalesData = {};
+    
+    Object.keys(salesByProduct).forEach(productId => {
+      const avgMonthlySales = Math.round(salesByProduct[productId].totalQuantity / monthsSinceStart);
+      productSalesData[productId] = avgMonthlySales;
+    });
+
+    // Calculate low stock items
     const lowStockItems = products
       .map(p => {
-        const variant = p.variants[0];
+        const variant = p.variants && p.variants[0];
         return {
-          sku: variant?.sku || variant?.barcode || p.id?.toString() || 'N/A',
+          sku: (variant && variant.sku) || (variant && variant.barcode) || (p.id && p.id.toString()) || 'N/A',
           name: p.title,
-          current: variant?.inventory_quantity || 0,
+          current: (variant && variant.inventory_quantity) || 0,
           minimum: 50,
-          deficit: Math.max(0, 50 - (variant?.inventory_quantity || 0)),
+          deficit: Math.max(0, 50 - ((variant && variant.inventory_quantity) || 0)),
           status: p.status
         };
       })
       .filter(item => item.deficit > 0)
       .sort((a, b) => b.deficit - a.deficit);
 
-    // Calculate quarterly predictions based on actual sales (only for active, physical products)
+    // Calculate quarterly predictions based on actual sales
     const predictions = products
-      .filter(p => productSalesData[p.id]) // Only include products with sales history
+      .filter(p => productSalesData[p.id])
       .slice(0, 20)
       .map(product => {
-        const variant = product.variants[0];
+        const variant = product.variants && product.variants[0];
         const avgMonthlySales = productSalesData[product.id] || 0;
-        const safetyBuffer = 1.2; // 20% safety buffer
-        
-        // Calculate quarterly targets (3 months per quarter)
+        const safetyBuffer = 1.2;
         const baseQuarterlySales = avgMonthlySales * 3;
         
         return {
-          sku: variant?.sku || variant?.barcode || product.id?.toString() || 'N/A',
+          sku: (variant && variant.sku) || (variant && variant.barcode) || (product.id && product.id.toString()) || 'N/A',
           product: product.title,
-          currentStock: variant?.inventory_quantity || 0,
+          currentStock: (variant && variant.inventory_quantity) || 0,
           q1Target: Math.round(baseQuarterlySales * safetyBuffer),
-          q2Target: Math.round(baseQuarterlySales * safetyBuffer * 1.1), // 10% seasonal increase
+          q2Target: Math.round(baseQuarterlySales * safetyBuffer * 1.1),
           q3Target: Math.round(baseQuarterlySales * safetyBuffer * 1.05),
-          q4Target: Math.round(baseQuarterlySales * safetyBuffer * 1.3), // Holiday season
+          q4Target: Math.round(baseQuarterlySales * safetyBuffer * 1.3),
           avgMonthlySales: avgMonthlySales,
           status: product.status
         };
       })
-      .filter(p => p.avgMonthlySales > 0); // Only show products that actually sell
+      .filter(p => p.avgMonthlySales > 0);
 
     res.json({
       lowStockItems,
       predictions,
       totalProducts: products.length,
       totalOrders: orders.length,
-      productsFiltered: 'active'
+      productsFiltered: 'active-physical-only'
     });
 
   } catch (error) {
-    console.error('Shopify API Error:', error.response?.data || error.message);
+    console.error('Shopify API Error:', error.response ? error.response.data : error.message);
     res.status(500).json({ 
       error: 'Failed to fetch Shopify data',
       details: error.message 
