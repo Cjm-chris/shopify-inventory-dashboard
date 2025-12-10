@@ -22,13 +22,44 @@ module.exports = async (req, res) => {
       params: { limit: 250 }
     });
 
-    const ordersResponse = await shopifyAPI.get('/orders.json', {
-      params: { 
+    // Calculate 6 months ago dynamically
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    console.log('Fetching orders from:', sixMonthsAgo.toISOString());
+    
+    // Fetch orders with pagination
+    let allOrders = [];
+    let hasMoreOrders = true;
+    let lastOrderId = null;
+    
+    while (hasMoreOrders && allOrders.length < 1000) {
+      const params = {
         limit: 250,
         status: 'any',
-        created_at_min: '2024-07-01'
+        created_at_min: sixMonthsAgo.toISOString()
+      };
+      
+      if (lastOrderId) {
+        params.since_id = lastOrderId;
       }
-    });
+      
+      const ordersResponse = await shopifyAPI.get('/orders.json', { params });
+      const fetchedOrders = ordersResponse.data.orders;
+      
+      if (fetchedOrders.length > 0) {
+        allOrders = allOrders.concat(fetchedOrders);
+        lastOrderId = fetchedOrders[fetchedOrders.length - 1].id;
+        console.log('Fetched batch:', fetchedOrders.length, 'orders. Total so far:', allOrders.length);
+      }
+      
+      if (fetchedOrders.length < 250) {
+        hasMoreOrders = false;
+      }
+    }
+    
+    const orders = allOrders;
+    console.log('Total orders fetched:', orders.length);
 
     // Filter out non-physical products
     const products = productsResponse.data.products.filter(p => {
@@ -41,9 +72,8 @@ module.exports = async (req, res) => {
       
       return true;
     });
-    
-    const orders = ordersResponse.data.orders;
- // Calculate sales by product
+
+    // Calculate sales by product
     const salesByProduct = {};
     let totalOrdersProcessed = 0;
     
