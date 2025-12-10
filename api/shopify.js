@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
     const productSalesData = {};
     
     Object.keys(salesByProduct).forEach(productId => {
-      const avgMonthlySales = Math.round(salesByProduct[productId] / monthsSinceStart);
+      const avgMonthlySales = salesByProduct[productId] / monthsSinceStart;
       productSalesData[productId] = avgMonthlySales;
     });
 
@@ -74,17 +74,17 @@ module.exports = async (req, res) => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
         
-        // Calculate minimum: if has sales data, use 2 months supply, otherwise use 25 as default
-        const calculatedMinimum = avgMonthlySales > 0 ? avgMonthlySales * 2 : 25;
+        // Calculate minimum: 2 months supply (no rounding, no defaults)
+        const calculatedMinimum = avgMonthlySales * 2;
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
         return {
           sku: (variant && variant.sku) || p.id.toString(),
           name: p.title,
           current: currentStock,
+          avgMonthlySales: avgMonthlySales,
           minimum: calculatedMinimum,
-          deficit: Math.max(0, calculatedMinimum - currentStock),
-          avgMonthlySales: avgMonthlySales
+          deficit: Math.max(0, calculatedMinimum - currentStock)
         };
       })
       .filter(item => item.deficit > 0)
