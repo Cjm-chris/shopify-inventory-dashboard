@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, TrendingUp, Package } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const ShopifyInventoryDashboard = () => {
   const [data, setData] = useState(null);
@@ -186,6 +188,8 @@ const ShopifyInventoryDashboard = () => {
           <p>Last updated: {new Date().toLocaleString()} • {totalProducts} products tracked </p>
         </div>
       </div>
+      <Analytics />
+      <SpeedInsights />
     </div>
   );
 };
