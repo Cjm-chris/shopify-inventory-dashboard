@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+// Mock Vercel Speed Insights
+jest.mock('@vercel/speed-insights/react', () => ({
+  SpeedInsights: () => null,
+}), { virtual: true });
+
+test('renders inventory dashboard login screen', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const headerElement = screen.getByText(/Inventory Dashboard/i);
+  expect(headerElement).toBeInTheDocument();
 });
