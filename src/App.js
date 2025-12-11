@@ -118,7 +118,7 @@ const ShopifyInventoryDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-       <div className="max-w-7xl mx-auto" style={{paddingLeft: '80px', paddingRight: '40px', paddingTop: '32px', paddingBottom: '32px'}}>
+      <div className="max-w-7xl mx-auto" style={{paddingLeft: '80px', paddingRight: '40px', paddingTop: '32px', paddingBottom: '32px'}}>
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -167,9 +167,6 @@ const ShopifyInventoryDashboard = () => {
                         }`}>
                           {Math.round(item?.current || 0)}
                         </span>
-                      </td>
-                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#eff6ff'}} className="font-semibold">
-                        {Math.round(item?.avgMonthlySales || 0)}
                       </td>
                       <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>{Math.round(item?.minimum || 0)}</td>
                     </tr>
