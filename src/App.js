@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { AlertTriangle, TrendingUp, Package } from 'lucide-react';
 
 const ShopifyInventoryDashboard = () => {
@@ -118,6 +119,8 @@ const ShopifyInventoryDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+
+      <Analytics />
       <div className="max-w-7xl mx-auto" style={{paddingLeft: '80px', paddingRight: '40px', paddingTop: '32px', paddingBottom: '32px'}}>
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -148,7 +151,6 @@ const ShopifyInventoryDashboard = () => {
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'Left'}} className="font-semibold text-slate-800">Product Name</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Units Needed</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">On Shelf</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#dbeafe'}} className="font-semibold text-slate-800">AMS</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Target Stock</th>
                   </tr>
                 </thead>
