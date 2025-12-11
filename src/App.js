@@ -59,7 +59,7 @@ const ShopifyInventoryDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-8">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <Package className="text-blue-600 mx-auto mb-4" size={64} />
+          
           <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">Inventory Dashboard</h2>
           <p className="text-slate-600 mb-6 text-center">Please enter the password to access the dashboard</p>
           <form onSubmit={handlePasswordSubmit}>
