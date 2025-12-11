@@ -127,7 +127,7 @@ const ShopifyInventoryDashboard = () => {
                 <Package className="text-blue-600" size={36} />
                 Inventory Planning Dashboard
               </h1>
-              <p className="text-slate-600 mt-2">Manufacturing Team Report - Live Shopify Data</p>
+              <p className="text-slate-600 mt-2">Stock to assemble</p>
             </div>
             <button 
               onClick={exportToPDF}
@@ -142,7 +142,7 @@ const ShopifyInventoryDashboard = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Low Stock Items</p>
+                <p className="text-slate-600 text-sm font-medium">Low Stock Items - CJM</p>
                 <p className="text-3xl font-bold text-red-600 mt-2">{lowStockItems.length}</p>
               </div>
             </div>
@@ -160,7 +160,7 @@ const ShopifyInventoryDashboard = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Total Orders</p>
+                <p className="text-slate-600 text-sm font-medium">Pulled data</p>
                 <p className="text-3xl font-bold text-green-600 mt-2">{totalOrders}</p>
               </div>
             </div>
@@ -168,8 +168,8 @@ const ShopifyInventoryDashboard = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-slate-800 mb-4">Items Below Minimum Stock Level</h2>
-          <p className="text-slate-600 mb-6">Minimum stock calculated from last 6 months of sales data (2 months supply)</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Qty to build</h2>
+          <p className="text-slate-600 mb-6">text placeholder</p>
           
           {lowStockItems.length === 0 ? (
             <div className="text-center py-12">
