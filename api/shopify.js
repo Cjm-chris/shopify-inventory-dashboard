@@ -24,28 +24,6 @@ module.exports = async (req, res) => {
       }
     });
 
-    // Fetch metafields for all products
-    const productsWithMetafields = await Promise.all(
-      productsResponse.data.products.map(async (product) => {
-        try {
-          const metafieldsResponse = await shopifyAPI.get(`/products/${product.id}/metafields.json`);
-          return {
-            ...product,
-            metafields: metafieldsResponse.data.metafields
-          };
-        } catch (error) {
-          console.error(`Error fetching metafields for product ${product.id}:`, error.message);
-          return {
-            ...product,
-            metafields: []
-          };
-        }
-      })
-    );
-    
-    // Replace the original products array with the one that includes metafields
-    productsResponse.data.products = productsWithMetafields;
-
     // Calculate 6 months ago from YESTERDAY (not today)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -179,24 +157,14 @@ module.exports = async (req, res) => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
         
-        // Extract the superseded_sku metafield
-        const supersededSkuMetafield = p.metafields?.find(
-          m => m.namespace === 'custom' && m.key === 'superseded_sku'
-        );
-        const prevSku = supersededSkuMetafield?.value || '';
-        
-        // Debug logging for first few products
-        if (productSalesData[p.id]) {
-          console.log(`Product ${p.id}: Found ${p.metafields?.length || 0} metafields, prevSku: ${prevSku}`);
-        }
-        
         // Calculate minimum: 1 month supply
         const calculatedMinimum = avgMonthlySales * 1;
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
         return {
+          productId: p.id,
           sku: (variant && variant.sku) || p.id.toString(),
-          prevSku: prevSku,
+          prevSku: '', // Will be filled in later
           name: p.title,
           current: currentStock,
           minimum: calculatedMinimum,
@@ -210,6 +178,39 @@ module.exports = async (req, res) => {
         const skuB = (b.sku || '').toString().toLowerCase();
         return skuA.localeCompare(skuB);
       });
+
+    // Now fetch metafields only for low stock items
+    console.log(`Fetching metafields for ${lowStockItems.length} low stock items...`);
+    
+    // Helper function to delay execution
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    for (let i = 0; i < lowStockItems.length; i++) {
+      const item = lowStockItems[i];
+      try {
+        const metafieldsResponse = await shopifyAPI.get(`/products/${item.productId}/metafields.json`);
+        
+        // Find the superseded_sku metafield
+        const supersededSku = metafieldsResponse.data.metafields.find(
+          m => m.namespace === 'custom' && m.key === 'superseded_sku'
+        );
+        
+        if (supersededSku) {
+          item.prevSku = supersededSku.value;
+          console.log(`Found superseded_sku for product ${item.productId}: ${supersededSku.value}`);
+        }
+        
+        // Add delay every 2 requests to stay under rate limit
+        if ((i + 1) % 2 === 0) {
+          await delay(500);
+        }
+      } catch (error) {
+        console.error(`Error fetching metafields for product ${item.productId}:`, error.message);
+      }
+    }
+    
+    // Remove productId from final output (it was only needed for fetching)
+    lowStockItems.forEach(item => delete item.productId);
 
     res.json({
       lowStockItems,
