@@ -85,8 +85,8 @@ module.exports = async (req, res) => {
     console.log('Total orders fetched:', orders.length);
 
     // Calculate the actual time period covered by the orders
-    let oldestOrderDate = yesterday;
-    let newestOrderDate = sixMonthsAgo;
+    let oldestOrderDate = sixMonthsAgo;
+    let newestOrderDate = yesterday;
     
     orders.forEach(order => {
       const orderDate = new Date(order.created_at);
@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
     
     // Calculate months between oldest and newest order
     const monthsDiff = (newestOrderDate - oldestOrderDate) / (1000 * 60 * 60 * 24 * 30.44); // Average days per month
-    const monthsSinceStart = Math.max(1, Math.round(monthsDiff)); // At least 1 month
+    const monthsSinceStart = Math.max(1, monthsDiff); // At least 1 month, keep as decimal for accuracy
     
     console.log('Date range of orders:', oldestOrderDate.toISOString(), 'to', newestOrderDate.toISOString());
     console.log('Months covered:', monthsSinceStart);
