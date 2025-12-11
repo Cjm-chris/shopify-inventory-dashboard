@@ -19,7 +19,10 @@ module.exports = async (req, res) => {
     });
 
     const productsResponse = await shopifyAPI.get('/products.json', {
-      params: { limit: 250 }
+      params: { 
+        limit: 250,
+        fields: 'id,title,status,product_type,variants,metafields'
+      }
     });
 
     // Calculate 6 months ago from YESTERDAY (not today)
@@ -155,12 +158,19 @@ module.exports = async (req, res) => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
         
+        // Extract the superseded_sku metafield
+        const supersededSkuMetafield = p.metafields?.find(
+          m => m.namespace === 'custom' && m.key === 'superseded_sku'
+        );
+        const prevSku = supersededSkuMetafield?.value || '';
+        
         // Calculate minimum: 1 month supply
         const calculatedMinimum = avgMonthlySales * 1;
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
         return {
           sku: (variant && variant.sku) || p.id.toString(),
+          prevSku: prevSku,
           name: p.title,
           current: currentStock,
           minimum: calculatedMinimum,

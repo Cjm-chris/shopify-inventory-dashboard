@@ -147,6 +147,7 @@ const ShopifyInventoryDashboard = () => {
                 <thead>
                   <tr style={{backgroundColor: '#e2e8f0'}}>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">SKU</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Prev SKU</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'Left'}} className="font-semibold text-slate-800">Product Name</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Units Needed</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">On Shelf</th>
@@ -157,6 +158,7 @@ const ShopifyInventoryDashboard = () => {
                   {lowStockItems.map((item, index) => (
                     <tr key={index} className="hover:bg-slate-50">
                       <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-mono text-sm text-slate-600">{item?.sku || 'N/A'}</td>
+                      <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-mono text-sm text-slate-500">{item?.prevSku || ''}</td>
                       <td style={{border: '1px solid black', padding: '16px', textAlign: 'left'}} className="font-medium">{item?.name || 'Unknown'}</td>
                       <td style={{border: '1px solid black', padding: '16px', textAlign: 'center'}}>
                         <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
