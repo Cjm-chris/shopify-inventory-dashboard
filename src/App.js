@@ -225,7 +225,7 @@ const ShopifyInventoryDashboard = () => {
         </div>
 
         <div className="mt-6 bg-white rounded-lg shadow p-4 text-center text-slate-600 text-sm">
-          <p>Data synchronized from Shopify • Last updated: {new Date().toLocaleString()} • {totalProducts} products tracked • {lowStockItems.length} items need restocking</p>
+          <p>Last updated: {new Date().toLocaleString()} • {totalProducts} products tracked </p>
         </div>
       </div>
     </div>
