@@ -185,29 +185,39 @@ module.exports = async (req, res) => {
     // Helper function to delay execution
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     
-    for (let i = 0; i < lowStockItems.length; i++) {
-      const item = lowStockItems[i];
-      try {
-        const metafieldsResponse = await shopifyAPI.get(`/products/${item.productId}/metafields.json`);
-        
-        // Find the superseded_sku metafield
-        const supersededSku = metafieldsResponse.data.metafields.find(
-          m => m.namespace === 'custom' && m.key === 'superseded_sku'
-        );
-        
-        if (supersededSku) {
-          item.prevSku = supersededSku.value;
-          console.log(`Found superseded_sku for product ${item.productId}: ${supersededSku.value}`);
-        }
-        
-        // Add delay every 2 requests to stay under rate limit
-        if ((i + 1) % 2 === 0) {
-          await delay(500);
-        }
-      } catch (error) {
-        console.error(`Error fetching metafields for product ${item.productId}:`, error.message);
+    // Fetch metafields in batches of 4 (to stay under rate limits)
+    const batchSize = 4;
+    for (let i = 0; i < lowStockItems.length; i += batchSize) {
+      const batch = lowStockItems.slice(i, i + batchSize);
+      
+      // Fetch all items in this batch in parallel
+      await Promise.all(
+        batch.map(async (item) => {
+          try {
+            const metafieldsResponse = await shopifyAPI.get(`/products/${item.productId}/metafields.json`);
+            
+            // Find the superseded_sku metafield
+            const supersededSku = metafieldsResponse.data.metafields.find(
+              m => m.namespace === 'custom' && m.key === 'superseded_sku'
+            );
+            
+            if (supersededSku) {
+              item.prevSku = supersededSku.value;
+              console.log(`Found superseded_sku for product ${item.productId}: ${supersededSku.value}`);
+            }
+          } catch (error) {
+            console.error(`Error fetching metafields for product ${item.productId}:`, error.message);
+          }
+        })
+      );
+      
+      // Wait between batches to respect rate limits (Shopify allows ~2 req/sec, so 4 per 2 seconds is safe)
+      if (i + batchSize < lowStockItems.length) {
+        await delay(2000); // 2 second delay between batches
       }
     }
+    
+    console.log(`Completed fetching metafields`);
     
     // Remove productId from final output (it was only needed for fetching)
     lowStockItems.forEach(item => delete item.productId);
