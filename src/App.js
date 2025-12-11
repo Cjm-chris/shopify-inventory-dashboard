@@ -156,11 +156,11 @@ const ShopifyInventoryDashboard = () => {
                 <thead>
                   <tr style={{backgroundColor: '#e2e8f0'}}>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">SKU</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Product Name</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'Left'}} className="font-semibold text-slate-800">Product Name</th>
                     <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Units Needed</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Current Stock</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#dbeafe'}} className="font-semibold text-slate-800">Avg Monthly Sales</th>
-                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Minimum Level</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">On Shelf</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center', backgroundColor: '#dbeafe'}} className="font-semibold text-slate-800">AMS</th>
+                    <th style={{border: '1px solid black', padding: '16px', textAlign: 'center'}} className="font-semibold text-slate-800">Target Stock</th>
                   </tr>
                 </thead>
                 <tbody>
