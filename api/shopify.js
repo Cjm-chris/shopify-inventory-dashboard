@@ -149,8 +149,8 @@ module.exports = async (req, res) => {
         const variant = p.variants && p.variants[0];
         const avgMonthlySales = productSalesData[p.id] || 0;
         
-        // Calculate minimum: 2 months supply
-        const calculatedMinimum = avgMonthlySales * 2;
+        // Calculate minimum: 1 month supply
+        const calculatedMinimum = avgMonthlySales * 1;
         const currentStock = (variant && variant.inventory_quantity) || 0;
         
         return {
