@@ -22,26 +22,28 @@ module.exports = async (req, res) => {
       params: { limit: 250 }
     });
 
-    // Calculate 6 months ago dynamically
+   // Calculate 6 months ago from today
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     
+    console.log('Today:', new Date().toISOString());
     console.log('Fetching orders from:', sixMonthsAgo.toISOString());
     
-    // Fetch orders with pagination
+    // Fetch orders with pagination - get up to 1000 orders
     let allOrders = [];
     let hasMoreOrders = true;
-    let lastOrderId = null;
+    let pageInfo = null;
     
     while (hasMoreOrders && allOrders.length < 1000) {
       const params = {
         limit: 250,
         status: 'any',
-        created_at_min: sixMonthsAgo.toISOString()
+        created_at_min: sixMonthsAgo.toISOString(),
+        order: 'created_at desc'
       };
       
-      if (lastOrderId) {
-        params.since_id = lastOrderId;
+      if (pageInfo) {
+        params.page_info = pageInfo;
       }
       
       const ordersResponse = await shopifyAPI.get('/orders.json', { params });
@@ -49,17 +51,28 @@ module.exports = async (req, res) => {
       
       if (fetchedOrders.length > 0) {
         allOrders = allOrders.concat(fetchedOrders);
-        lastOrderId = fetchedOrders[fetchedOrders.length - 1].id;
         console.log('Fetched batch:', fetchedOrders.length, 'orders. Total so far:', allOrders.length);
+        
+        // Check for pagination link in headers
+        const linkHeader = ordersResponse.headers.link;
+        if (linkHeader && linkHeader.includes('rel="next"')) {
+          // Extract page_info from link header
+          const nextMatch = linkHeader.match(/<[^>]*[?&]page_info=([^&>]+)/);
+          pageInfo = nextMatch ? nextMatch[1] : null;
+        } else {
+          pageInfo = null;
+        }
       }
       
-      if (fetchedOrders.length < 250) {
+      if (fetchedOrders.length < 250 || !pageInfo) {
         hasMoreOrders = false;
       }
     }
     
     const orders = allOrders;
     console.log('Total orders fetched:', orders.length);
+    console.log('Date range:', orders.length > 0 ? 
+      `${orders[orders.length - 1].created_at} to ${orders[0].created_at}` : 'No orders');
 
     // Filter out non-physical products
     const products = productsResponse.data.products.filter(p => {
@@ -76,6 +89,7 @@ module.exports = async (req, res) => {
     // Calculate sales by product
     const salesByProduct = {};
     let totalOrdersProcessed = 0;
+    let totalItemsSold = 0;
     
     orders.forEach(order => {
       totalOrdersProcessed++;
@@ -87,21 +101,40 @@ module.exports = async (req, res) => {
               salesByProduct[productId] = 0;
             }
             salesByProduct[productId] += item.quantity;
+            totalItemsSold += item.quantity;
           }
         });
       }
     });
     
     console.log('Total orders processed:', totalOrdersProcessed);
+    console.log('Total items sold across all products:', totalItemsSold);
     console.log('Products with sales:', Object.keys(salesByProduct).length);
-    console.log('Sample sales data:', Object.entries(salesByProduct).slice(0, 5));
+    console.log('Top 5 selling products:', 
+      Object.entries(salesByProduct)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([id, qty]) => `Product ${id}: ${qty} units`)
+    );
 
-    const monthsSinceStart = 6;
+    // Calculate average monthly sales (6 months of data)
+    const monthsOfData = 6;
     const productSalesData = {};
     
     Object.keys(salesByProduct).forEach(productId => {
-      const avgMonthlySales = Math.round(salesByProduct[productId] / monthsSinceStart);
-      productSalesData[productId] = avgMonthlySales;
+      const totalSold = salesByProduct[productId];
+      const avgMonthlySales = totalSold / monthsOfData;
+      productSalesData[productId] = Math.round(avgMonthlySales);
+      
+      // Log a sample product for debugging
+      if (productId === '7999121686774') {
+        console.log(`Sample product ${productId}:`, {
+          totalSold,
+          monthsOfData,
+          avgMonthlySales,
+          rounded: Math.round(avgMonthlySales)
+        });
+      }
     });
 
     // Calculate low stock items and sort by SKU
