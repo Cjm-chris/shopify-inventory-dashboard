@@ -125,16 +125,12 @@ const ShopifyInventoryDashboard = () => {
             <div>
               <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <Package className="text-blue-600" size={36} />
-                Stock to Assemble
+                Stock to Assemble - CJM
               </h1>
               
             </div>
-            <button 
-              onClick={exportToPDF}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Export PDF Report
-            </button>
+            
+
           </div>
         </div>
 
