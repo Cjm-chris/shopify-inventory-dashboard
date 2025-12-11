@@ -122,8 +122,7 @@ const ShopifyInventoryDashboard = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                <Package className="text-blue-600" size={36} />
+             <h1 className="text-3xl font-bold text-slate-800">
                 Stock to Assemble - CJM
               </h1>
               
