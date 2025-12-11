@@ -163,7 +163,6 @@ module.exports = async (req, res) => {
           sku: (variant && variant.sku) || p.id.toString(),
           name: p.title,
           current: currentStock,
-          avgMonthlySales: avgMonthlySales,
           minimum: calculatedMinimum,
           deficit: Math.max(0, calculatedMinimum - currentStock)
         };
