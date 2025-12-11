@@ -87,8 +87,7 @@ const ShopifyInventoryDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8 flex items-center justify-center">
         <div className="text-center">
-          <Package className="text-blue-600 mx-auto mb-4 animate-pulse" size={64} />
-          <div className="text-2xl font-bold text-slate-800">Loading inventory data from Shopify...</div>
+                    <div className="text-2xl font-bold text-slate-800">Loading inventory data from Shopify...</div>
           <div className="text-slate-600 mt-2">This may take a few moments</div>
         </div>
       </div>
