@@ -22,28 +22,33 @@ module.exports = async (req, res) => {
       params: { limit: 250 }
     });
 
-   // Calculate 6 months ago from today
-    const sixMonthsAgo = new Date();
+    // Calculate 6 months ago from YESTERDAY (not today)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(23, 59, 59, 999); // End of yesterday
+    
+    const sixMonthsAgo = new Date(yesterday);
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setHours(0, 0, 0, 0); // Start of that day
     
-    console.log('Today:', new Date().toISOString());
-    console.log('Fetching orders from:', sixMonthsAgo.toISOString());
+    console.log('Fetching orders from:', sixMonthsAgo.toISOString(), 'to', yesterday.toISOString());
     
-    // Fetch orders with pagination - get up to 1000 orders
+    // Fetch orders with pagination - get at least 1000 orders
     let allOrders = [];
     let hasMoreOrders = true;
-    let pageInfo = null;
+    let lastOrderId = null;
+    const MIN_ORDERS = 1000;
     
-    while (hasMoreOrders && allOrders.length < 1000) {
+    while (hasMoreOrders) {
       const params = {
         limit: 250,
         status: 'any',
         created_at_min: sixMonthsAgo.toISOString(),
-        order: 'created_at desc'
+        created_at_max: yesterday.toISOString()
       };
       
-      if (pageInfo) {
-        params.page_info = pageInfo;
+      if (lastOrderId) {
+        params.since_id = lastOrderId;
       }
       
       const ordersResponse = await shopifyAPI.get('/orders.json', { params });
@@ -51,28 +56,50 @@ module.exports = async (req, res) => {
       
       if (fetchedOrders.length > 0) {
         allOrders = allOrders.concat(fetchedOrders);
+        lastOrderId = fetchedOrders[fetchedOrders.length - 1].id;
         console.log('Fetched batch:', fetchedOrders.length, 'orders. Total so far:', allOrders.length);
-        
-        // Check for pagination link in headers
-        const linkHeader = ordersResponse.headers.link;
-        if (linkHeader && linkHeader.includes('rel="next"')) {
-          // Extract page_info from link header
-          const nextMatch = linkHeader.match(/<[^>]*[?&]page_info=([^&>]+)/);
-          pageInfo = nextMatch ? nextMatch[1] : null;
+      }
+      
+      // Continue if we have less than MIN_ORDERS or if there are more orders in the current date range
+      if (fetchedOrders.length < 250) {
+        // No more orders in this batch
+        if (allOrders.length < MIN_ORDERS) {
+          // We need more orders - expand the date range backwards
+          console.log('Only', allOrders.length, 'orders found in 6 months. Fetching older orders to reach', MIN_ORDERS);
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 3); // Go back another 3 months
+          lastOrderId = null; // Reset pagination
+          hasMoreOrders = true;
         } else {
-          pageInfo = null;
+          hasMoreOrders = false;
         }
       }
       
-      if (fetchedOrders.length < 250 || !pageInfo) {
+      // Safety limit to prevent infinite loops
+      if (allOrders.length >= 5000) {
+        console.log('Reached safety limit of 5000 orders');
         hasMoreOrders = false;
       }
     }
     
     const orders = allOrders;
     console.log('Total orders fetched:', orders.length);
-    console.log('Date range:', orders.length > 0 ? 
-      `${orders[orders.length - 1].created_at} to ${orders[0].created_at}` : 'No orders');
+
+    // Calculate the actual time period covered by the orders
+    let oldestOrderDate = yesterday;
+    let newestOrderDate = sixMonthsAgo;
+    
+    orders.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      if (orderDate < oldestOrderDate) oldestOrderDate = orderDate;
+      if (orderDate > newestOrderDate) newestOrderDate = orderDate;
+    });
+    
+    // Calculate months between oldest and newest order
+    const monthsDiff = (newestOrderDate - oldestOrderDate) / (1000 * 60 * 60 * 24 * 30.44); // Average days per month
+    const monthsSinceStart = Math.max(1, Math.round(monthsDiff)); // At least 1 month
+    
+    console.log('Date range of orders:', oldestOrderDate.toISOString(), 'to', newestOrderDate.toISOString());
+    console.log('Months covered:', monthsSinceStart);
 
     // Filter out non-physical products
     const products = productsResponse.data.products.filter(p => {
@@ -89,7 +116,6 @@ module.exports = async (req, res) => {
     // Calculate sales by product
     const salesByProduct = {};
     let totalOrdersProcessed = 0;
-    let totalItemsSold = 0;
     
     orders.forEach(order => {
       totalOrdersProcessed++;
@@ -101,40 +127,20 @@ module.exports = async (req, res) => {
               salesByProduct[productId] = 0;
             }
             salesByProduct[productId] += item.quantity;
-            totalItemsSold += item.quantity;
           }
         });
       }
     });
     
     console.log('Total orders processed:', totalOrdersProcessed);
-    console.log('Total items sold across all products:', totalItemsSold);
     console.log('Products with sales:', Object.keys(salesByProduct).length);
-    console.log('Top 5 selling products:', 
-      Object.entries(salesByProduct)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([id, qty]) => `Product ${id}: ${qty} units`)
-    );
+    console.log('Sample sales data:', Object.entries(salesByProduct).slice(0, 5));
 
-    // Calculate average monthly sales (6 months of data)
-    const monthsOfData = 6;
     const productSalesData = {};
     
     Object.keys(salesByProduct).forEach(productId => {
-      const totalSold = salesByProduct[productId];
-      const avgMonthlySales = totalSold / monthsOfData;
-      productSalesData[productId] = Math.round(avgMonthlySales);
-      
-      // Log a sample product for debugging
-      if (productId === '7999121686774') {
-        console.log(`Sample product ${productId}:`, {
-          totalSold,
-          monthsOfData,
-          avgMonthlySales,
-          rounded: Math.round(avgMonthlySales)
-        });
-      }
+      const avgMonthlySales = Math.round(salesByProduct[productId] / monthsSinceStart);
+      productSalesData[productId] = avgMonthlySales;
     });
 
     // Calculate low stock items and sort by SKU
@@ -167,7 +173,12 @@ module.exports = async (req, res) => {
     res.json({
       lowStockItems,
       totalProducts: products.length,
-      totalOrders: orders.length
+      totalOrders: orders.length,
+      dateRange: {
+        from: oldestOrderDate.toISOString(),
+        to: newestOrderDate.toISOString(),
+        monthsCovered: monthsSinceStart
+      }
     });
 
   } catch (error) {
