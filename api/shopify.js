@@ -85,20 +85,26 @@ module.exports = async (req, res) => {
     console.log('Total orders fetched:', orders.length);
 
     // Calculate the actual time period covered by the orders
-    let oldestOrderDate = sixMonthsAgo;
-    let newestOrderDate = yesterday;
+    let oldestOrderDate = null;
+    let newestOrderDate = null;
     
     orders.forEach(order => {
       const orderDate = new Date(order.created_at);
-      if (orderDate < oldestOrderDate) oldestOrderDate = orderDate;
-      if (orderDate > newestOrderDate) newestOrderDate = orderDate;
+      if (!oldestOrderDate || orderDate < oldestOrderDate) oldestOrderDate = orderDate;
+      if (!newestOrderDate || orderDate > newestOrderDate) newestOrderDate = orderDate;
     });
     
-    // Calculate months between oldest and newest order
-    const monthsDiff = (newestOrderDate - oldestOrderDate) / (1000 * 60 * 60 * 24 * 30.44); // Average days per month
-    const monthsSinceStart = Math.max(1, monthsDiff); // At least 1 month, keep as decimal for accuracy
+    // Calculate months between oldest and newest order using calendar months
+    let monthsSinceStart;
+    if (oldestOrderDate && newestOrderDate) {
+      const yearDiff = newestOrderDate.getFullYear() - oldestOrderDate.getFullYear();
+      const monthDiff = newestOrderDate.getMonth() - oldestOrderDate.getMonth();
+      monthsSinceStart = Math.max(1, yearDiff * 12 + monthDiff + 1); // +1 to include both start and end months
+    } else {
+      monthsSinceStart = 6; // Fallback to 6 months if no orders
+    }
     
-    console.log('Date range of orders:', oldestOrderDate.toISOString(), 'to', newestOrderDate.toISOString());
+    console.log('Date range of orders:', oldestOrderDate?.toISOString(), 'to', newestOrderDate?.toISOString());
     console.log('Months covered:', monthsSinceStart);
 
     // Filter out non-physical products
@@ -139,7 +145,7 @@ module.exports = async (req, res) => {
     const productSalesData = {};
     
     Object.keys(salesByProduct).forEach(productId => {
-      const avgMonthlySales = Math.round(salesByProduct[productId] / monthsSinceStart);
+      const avgMonthlySales = Math.ceil(salesByProduct[productId] / monthsSinceStart);
       productSalesData[productId] = avgMonthlySales;
     });
 
