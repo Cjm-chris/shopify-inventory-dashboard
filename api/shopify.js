@@ -20,10 +20,31 @@ module.exports = async (req, res) => {
 
     const productsResponse = await shopifyAPI.get('/products.json', {
       params: { 
-        limit: 250,
-        fields: 'id,title,status,product_type,variants,metafields'
+        limit: 250
       }
     });
+
+    // Fetch metafields for all products
+    const productsWithMetafields = await Promise.all(
+      productsResponse.data.products.map(async (product) => {
+        try {
+          const metafieldsResponse = await shopifyAPI.get(`/products/${product.id}/metafields.json`);
+          return {
+            ...product,
+            metafields: metafieldsResponse.data.metafields
+          };
+        } catch (error) {
+          console.error(`Error fetching metafields for product ${product.id}:`, error.message);
+          return {
+            ...product,
+            metafields: []
+          };
+        }
+      })
+    );
+    
+    // Replace the original products array with the one that includes metafields
+    productsResponse.data.products = productsWithMetafields;
 
     // Calculate 6 months ago from YESTERDAY (not today)
     const yesterday = new Date();
@@ -163,6 +184,11 @@ module.exports = async (req, res) => {
           m => m.namespace === 'custom' && m.key === 'superseded_sku'
         );
         const prevSku = supersededSkuMetafield?.value || '';
+        
+        // Debug logging for first few products
+        if (productSalesData[p.id]) {
+          console.log(`Product ${p.id}: Found ${p.metafields?.length || 0} metafields, prevSku: ${prevSku}`);
+        }
         
         // Calculate minimum: 1 month supply
         const calculatedMinimum = avgMonthlySales * 1;
