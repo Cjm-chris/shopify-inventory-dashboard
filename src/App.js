@@ -125,7 +125,7 @@ const ShopifyInventoryDashboard = () => {
             <div>
               <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <Package className="text-blue-600" size={36} />
-                Inventory Planning Dashboard
+                Stock to Assemble
               </h1>
               <p className="text-slate-600 mt-2">Stock to assemble</p>
             </div>
