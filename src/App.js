@@ -127,7 +127,7 @@ const ShopifyInventoryDashboard = () => {
                 <Package className="text-blue-600" size={36} />
                 Stock to Assemble
               </h1>
-              <p className="text-slate-600 mt-2">Stock to assemble</p>
+              <p className="text-slate-600 mt-2">Print Report?</p>
             </div>
             <button 
               onClick={exportToPDF}
@@ -138,34 +138,7 @@ const ShopifyInventoryDashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Low Stock Items - CJM</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">{lowStockItems.length}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Total Products Tracked</p>
-                <p className="text-3xl font-bold text-slate-800 mt-2">{totalProducts}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Pulled data</p>
-                <p className="text-3xl font-bold text-green-600 mt-2">{totalOrders}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-bold text-slate-800 mb-4">Qty to build</h2>
