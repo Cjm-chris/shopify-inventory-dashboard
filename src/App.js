@@ -53,8 +53,8 @@ const ShopifyInventoryDashboard = () => {
   }, [authenticated]);
 
   //const exportToPDF = () => {
-    alert('In a production app, this would generate a PDF report for your manufacturing team');
-  };
+  //  alert('In a production app, this would generate a PDF report for your manufacturing team');
+  //};
 
   // Show login screen if not authenticated
   if (!authenticated) {
