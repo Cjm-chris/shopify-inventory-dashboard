@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/fulfillment-label-cost.js": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/fulfillment-label-cost",
+      "headers": [
+        {
+          "key": "x-vercel-protection-bypass",
+          "value": "disabled"
+        }
+      ]
+    }
+  ]
+}
