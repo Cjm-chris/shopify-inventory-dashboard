@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, Package } from 'lucide-react';
+import { AlertTriangle, Package } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
@@ -52,7 +52,7 @@ const ShopifyInventoryDashboard = () => {
     }
   }, [authenticated]);
 
-  const exportToPDF = () => {
+  //const exportToPDF = () => {
     alert('In a production app, this would generate a PDF report for your manufacturing team');
   };
 
@@ -116,7 +116,7 @@ const ShopifyInventoryDashboard = () => {
 
   const lowStockItems = data?.lowStockItems || [];
   const totalProducts = data?.totalProducts || 0;
-  const totalOrders = data?.totalOrders || 0;
+  //const totalOrders = data?.totalOrders || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
